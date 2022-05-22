@@ -1,6 +1,6 @@
 **所有实验均在此md！**
 
-# 实验一![1650794806002.png](image/README/1650794806002.png)
+# 实验一
 
 ![1650794809606.png](image/README/1650794809606.png)
 
@@ -40,7 +40,6 @@ Jupyter NoteBook的安装
 
 ![1650794833428.png](image/README/1650794833428.png)
 
-
 # 实验二
 
 创建一个新工程
@@ -52,7 +51,6 @@ Jupyter NoteBook的安装
 ![](image/README/1652277647416.png)
 
 修改fragment
-
 
 ```
 <?xml version="1.0" encoding="utf-8"?>  
@@ -168,3 +166,103 @@ Jupyter NoteBook的安装
 ![](image/README/1652279240151.png)
 
 ![img](image/README/1652279103193.png)
+
+
+# 实验三
+
+补全代码
+
+```
+ // TODO 5: Optional GPU Delegates
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
+```
+
+
+```
+override fun analyze(imageProxy: ImageProxy) {
+
+            val items = mutableListOf<Recognition>()
+            // TODO 2: Convert Image to Bitmap then to TensorImage
+            val tfImage = TensorImage.fromBitmap(toBitmap(imageProxy))
+
+            // TODO 3: Process the image using the trained model, sort and pick out the top results
+            val outputs = flowerModel.process(tfImage)
+                .probabilityAsCategoryList.apply {
+                    sortByDescending { it.score } // Sort with highest confidence first排序
+                }.take(MAX_RESULT_DISPLAY) // take the top results
+            // TODO 4: Converting the top probability items into a list of recognitions
+            for (output in outputs) {
+                items.add(Recognition(output.label, output.score))
+            }
+```
+
+
+实验结果
+
+![](image/README/1653220051768.png)
+
+
+# 实验四
+
+历年财富世界500强的数据分析
+
+%matplotlib inline
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('fortune500.csv')
+df.head()
+df.tail()
+
+df.columns = ['year', 'rank', 'company', 'revenue', 'profit']
+len(df)
+
+df.dtypes
+
+non_numberic_profits = df.profit.str.contains('[^0-9.-]')
+df.loc[non_numberic_profits].head()
+
+len(df.profit[non_numberic_profits])
+
+bin_sizes, _, _ = plt.hist(df.year[non_numberic_profits], bins=range(1955, 2006))
+
+df = df.loc[~non_numberic_profits]
+df.profit = df.profit.apply(pd.to_numeric)
+
+len(df)
+
+df.dtypes
+
+group_by_year = df.loc[:, ['year', 'revenue', 'profit']].groupby('year')
+avgs = group_by_year.mean()
+x = avgs.index
+y1 = avgs.profit
+def plot(x, y, ax, title, y_label):
+    ax.set_title(title)
+    ax.set_ylabel(y_label)
+    ax.plot(x, y)
+    ax.margins(x=0, y=0)
+
+fig, ax = plt.subplots()
+plot(x, y1, ax, 'Increase in mean Fortune 500 company profits from 1955 to 2005', 'Profit (millions)')
+
+y2 = avgs.revenue
+fig, ax = plt.subplots()
+plot(x, y2, ax, 'Increase in mean Fortune 500 company revenues from 1955 to 2005', 'Revenue (millions)')
+
+def plot_with_std(x, y, stds, ax, title, y_label):
+    ax.fill_between(x, y - stds, y + stds, alpha=0.2)
+    plot(x, y, ax, title, y_label)
+fig, (ax1, ax2) = plt.subplots(ncols=2)
+title = 'Increase in mean and std Fortune 500 company %s from 1955 to 2005'
+stds1 = group_by_year.std().profit.values
+stds2 = group_by_year.std().revenue.values
+plot_with_std(x, y1.values, stds1, ax1, title % 'profits', 'Profit (millions)')
+plot_with_std(x, y2.values, stds2, ax2, title % 'revenues', 'Revenue (millions)')
+fig.set_size_inches(14, 4)
+fig.tight_layout()
+
+实验结果
+
+![](image/README/1653219906781.png)
