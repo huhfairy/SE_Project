@@ -167,7 +167,6 @@ Jupyter NoteBook的安装
 
 ![img](image/README/1652279103193.png)
 
-
 # 实验三
 
 补全代码
@@ -176,7 +175,6 @@ Jupyter NoteBook的安装
  // TODO 5: Optional GPU Delegates
     implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
 ```
-
 
 ```
 override fun analyze(imageProxy: ImageProxy) {
@@ -196,11 +194,9 @@ override fun analyze(imageProxy: ImageProxy) {
             }
 ```
 
-
 实验结果
 
 ![](image/README/1653220051768.png)
-
 
 # 实验四
 
@@ -266,3 +262,133 @@ fig.tight_layout()
 实验结果
 
 ![](image/README/1653219906781.png)
+
+
+# 实验五
+
+### 模型训练
+
+#### 获取数据
+
+从 `storage.googleapis.com`中下载本实验所需要的数据集。`image_path`可以定制，默认是在用户目录的 `.keras\datasets`中。
+
+```
+image_path = tf.keras.utils.get_file(
+      'flower_photos.tgz',
+      'https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz',
+      extract=True)
+image_path = os.path.join(os.path.dirname(image_path), 'flower_photos')
+```
+
+```
+Downloading data from https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz
+228813984/228813984 [==============================] - 251s 1us/step
+```
+
+#### 运行示例
+
+第一步：加载数据集，并将数据集分为训练数据和测试数据。
+
+```
+data = DataLoader.from_folder(image_path)
+train_data, test_data = data.split(0.9)
+```
+
+```
+INFO:tensorflow:Load image with size: 3670, num_label: 5, labels: daisy, dandelion, roses, sunflowers, tulips.
+```
+
+第二步：训练Tensorflow模型。
+
+```
+inception_v3_spec = image_classifier.ModelSpec(uri='https://storage.googleapis.com/tfhub-modules/tensorflow/efficientnet/lite0/feature-vector/2.tar.gz')
+inception_v3_spec.input_image_shape = [240, 240]
+model = image_classifier.create(train_data, model_spec=inception_v3_spec)
+```
+
+```
+INFO:tensorflow:Retraining the models...
+
+
+INFO:tensorflow:Retraining the models...
+
+
+Model: "sequential"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ hub_keras_layer_v1v2 (HubKe  (None, 1280)             3413024   
+ rasLayerV1V2)                                                 
+
+ dropout (Dropout)           (None, 1280)              0       
+
+ dense (Dense)               (None, 5)                 6405    
+
+=================================================================
+Total params: 3,419,429
+Trainable params: 6,405
+Non-trainable params: 3,413,024
+_________________________________________________________________
+None
+Epoch 1/5
+
+
+D:\IT\Anaconda3\lib\site-packages\keras\optimizers\optimizer_v2\gradient_descent.py:108: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
+  super(SGD, self).__init__(name, **kwargs)
+
+
+103/103 [==============================] - 45s 420ms/step - loss: 0.8842 - accuracy: 0.7624
+Epoch 2/5
+103/103 [==============================] - 44s 425ms/step - loss: 0.6595 - accuracy: 0.8917
+Epoch 3/5
+103/103 [==============================] - 43s 421ms/step - loss: 0.6290 - accuracy: 0.9154
+Epoch 4/5
+103/103 [==============================] - 44s 429ms/step - loss: 0.6047 - accuracy: 0.9235
+Epoch 5/5
+103/103 [==============================] - 44s 428ms/step - loss: 0.5916 - accuracy: 0.9326
+```
+
+第三步：评估模型。
+
+```
+loss, accuracy = model.evaluate(test_data)
+```
+
+```
+12/12 [==============================] - 6s 385ms/step - loss: 0.6264 - accuracy: 0.9128
+```
+
+第四步，导出Tensorflow Lite模型。
+
+```
+model.export(export_dir='.')
+```
+
+```
+INFO:tensorflow:Assets written to: D:\Temp\tmpws0wzwmz\assets
+
+
+INFO:tensorflow:Assets written to: D:\Temp\tmpws0wzwmz\assets
+D:\IT\Anaconda3\lib\site-packages\tensorflow\lite\python\convert.py:766: UserWarning: Statistics for quantized inputs were expected, but not specified; continuing anyway.
+  warnings.warn("Statistics for quantized inputs were expected, but not "
+
+
+INFO:tensorflow:Label file is inside the TFLite model with metadata.
+
+
+INFO:tensorflow:Label file is inside the TFLite model with metadata.
+
+
+INFO:tensorflow:Saving labels in D:\Temp\tmpk91_ail8\labels.txt
+
+
+INFO:tensorflow:Saving labels in D:\Temp\tmpk91_ail8\labels.txt
+
+
+INFO:tensorflow:TensorFlow Lite model exported successfully: .\model.tflite
+
+
+INFO:tensorflow:TensorFlow Lite model exported successfully: .\model.tflite
+```
+
+![](image/README/1654444327169.png)
